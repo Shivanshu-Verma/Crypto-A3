@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from problem_1 import Functional_Des
+import traceback
 
 app = Flask(__name__)
 chall = Functional_Des()
@@ -10,7 +11,10 @@ def challenge():
         challenge_hex = chall.get_challenge().hex()
         return jsonify({"challenge": challenge_hex})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": str(e),
+            "exception": traceback.format_exc()
+        }), 500
 
 @app.route("/decrypt", methods=["POST"])
 def decrypt():
@@ -22,7 +26,10 @@ def decrypt():
         decrypted = chall.decrypt(ct)
         return jsonify({"decrypted": decrypted.hex()})
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({
+            "error": str(e),
+            "exception": traceback.format_exc()
+        }), 400
 
 @app.route("/reveal", methods=["POST"])
 def reveal():
@@ -39,7 +46,10 @@ def reveal():
             flag_str = result.hex()
         return jsonify({"flag": flag_str})
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({
+            "error": str(e),
+            "exception": traceback.format_exc()
+        }), 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
