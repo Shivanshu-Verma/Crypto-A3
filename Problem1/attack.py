@@ -1,7 +1,7 @@
 import requests
 import time
 
-# Change this to your server's URL if needed.
+# URL of the vulnerable server (adjust if needed)
 BASE_URL = "http://localhost:5000"
 
 def get_challenge():
@@ -17,46 +17,60 @@ def decrypt(ciphertext_hex):
     response = requests.post(url, json={"ct": ciphertext_hex})
     data = response.json()
     if "decrypted" not in data:
-        # Print error details if available.
         print("Decrypt error:", data.get("error"), data.get("exception"))
         return None
     return data["decrypted"]
 
-def reveal(plaintext_hex):
+def reveal(candidate_hex):
     url = f"{BASE_URL}/reveal"
-    response = requests.post(url, json={"pt": plaintext_hex})
+    response = requests.post(url, json={"pt": candidate_hex})
     return response.json()
 
+def complement_bytes(hexstr):
+    # Convert hex string to bytes, then compute bytewise complement.
+    b = bytes.fromhex(hexstr)
+    comp = bytes((~x & 0xFF) for x in b)
+    return comp.hex()
+
 def main():
-    # Get the challenge ciphertext (encrypted using the original key).
-    challenge_ciphertext = get_challenge()
-    print("Fetched challenge ciphertext:", challenge_ciphertext)
+    # Get the challenge ciphertext from the server.
+    challenge_ct = get_challenge()
+    print("Fetched challenge ciphertext:", challenge_ct)
     
-    # We'll try up to 128 attempts (due to the counter limit)
-    for attempt in range(1, 129):
+    # We have at most 128 decryptions before the counter runs out.
+    for attempt in range(1, 1281):
         print(f"\nAttempt {attempt}:")
         
-        # Get a decrypted result using the altered key.
-        dec_hex = decrypt(challenge_ciphertext)
+        dec_hex = decrypt(challenge_ct)
         if dec_hex is None:
-            # If error in decryption, skip this round.
             continue
+        
         print("Decrypted output:", dec_hex)
         
-        # Send the decrypted output to the reveal endpoint.
-        reveal_response = reveal(dec_hex)
-        if "flag" in reveal_response:
-            print("\n[+] Flag recovered!")
-            print("Flag:", reveal_response["flag"])
+        # First, try the decrypted output directly.
+        res = reveal(dec_hex)
+        if "flag" in res:
+            print("\n[+] Flag recovered (direct match)!")
+            print("Flag:", res["flag"])
             return
         else:
-            # The reveal endpoint returns an error message if the plaintext is not the challenge.
-            print("Reveal response:", reveal_response.get("error"))
+            print("Direct reveal response:", res.get("error"))
         
-        # Optionally wait a short time before next attempt.
+        # Next, try the complement of the decrypted output.
+        dec_comp = complement_bytes(dec_hex)
+        print("Trying complement:", dec_comp)
+        res_comp = reveal(dec_comp)
+        if "flag" in res_comp:
+            print("\n[+] Flag recovered via complement!")
+            print("Flag:", res_comp["flag"])
+            return
+        else:
+            print("Complement reveal response:", res_comp.get("error"))
+        
+        # Wait a short time (optional) before next attempt.
         time.sleep(0.1)
     
-    print("\n[-] Failed to recover flag after 128 attempts.")
+    print("\n[-] Failed to recover flag after 1280 attempts.")
 
 if __name__ == "__main__":
     main()

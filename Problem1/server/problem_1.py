@@ -11,7 +11,7 @@ class Functional_Des:
         self.iv = os.urandom(8)
         self.flipped_bits = set(range(0, 192, 8))
         self.challenge = os.urandom(64)
-        self.counter = 128
+        self.counter = 1280
 
     def get_random_string(self, plain):
         if plain == self.challenge:
@@ -51,7 +51,7 @@ if __name__ == "__main__":
               "1. Fetch challenge\n"
               "2. Decrypt\n"
               "3. Reveal Random String\n")
-    signal.alarm(128)
+    #signal.alarm(128)
     while True:
         try:
             option = int(input(PROMPT))
