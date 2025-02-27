@@ -2,36 +2,37 @@ import requests
 
 BASE_URL = "http://localhost:5000"
 
-def fetch_challenge():
+def handle_response(response):
     try:
-        response = requests.get(f"{BASE_URL}/challenge")
-        response.raise_for_status()
         data = response.json()
-        print("\n[+] Challenge (hex):", data.get("challenge"))
+        if "error" in data:
+            print("\nError:", data["error"])
+        return data
     except Exception as e:
-        print("Error fetching challenge:", e)
+        print("Error:", e)
+        return None
+
+def fetch_challenge():
+    response = requests.get(f"{BASE_URL}/challenge")
+    data = handle_response(response)
+    if data and "challenge" in data:
+        print("\n[+] Challenge (hex):", data.get("challenge"))
 
 def decrypt():
     ct = input("Enter ciphertext (hex): ").strip()
-    try:
-        payload = {"ct": ct}
-        response = requests.post(f"{BASE_URL}/decrypt", json=payload)
-        response.raise_for_status()
-        data = response.json()
+    payload = {"ct": ct}
+    response = requests.post(f"{BASE_URL}/decrypt", json=payload)
+    data = handle_response(response)
+    if data and "decrypted" in data:
         print("\n[+] Decrypted output (hex):", data.get("decrypted"))
-    except Exception as e:
-        print("Error during decryption:", e)
 
 def reveal():
     pt = input("Enter plaintext (hex): ").strip()
-    try:
-        payload = {"pt": pt}
-        response = requests.post(f"{BASE_URL}/reveal", json=payload)
-        response.raise_for_status()
-        data = response.json()
+    payload = {"pt": pt}
+    response = requests.post(f"{BASE_URL}/reveal", json=payload)
+    data = handle_response(response)
+    if data and "flag" in data:
         print("\n[+] Revealed secret:", data.get("flag"))
-    except Exception as e:
-        print("Error revealing the secret string:", e)
 
 def main():
     while True:
