@@ -1,6 +1,18 @@
 version: '3'
 services:
   triple_des_server:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: triple_des_server-1
     ports:
       - "5000:5000"
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+        - action: restart
+          path: problem_1.py
+    

@@ -33,7 +33,7 @@ def main():
     print("Fetched challenge ciphertext:", challenge_ciphertext)
     
     # We'll try up to 128 attempts (due to the counter limit)
-    for attempt in range(1, 513):
+    for attempt in range(1, 129):
         print(f"\nAttempt {attempt}:")
         
         # Get a decrypted result using the altered key.
